@@ -774,10 +774,14 @@ AUTH_STURDYREF_RE = re.compile(r"pb://([^@]+)@([^/]*)/(.+)$")
 NONAUTH_STURDYREF_RE = re.compile(r"pbu://([^/]*)/(.+)$")
 
 IPV4_HINT_RE = re.compile(r"^([^:]+):(\d+)$")
+IPV6_HINT_RE = re.compile(r"^ipv6:\[([^\.]+)\]:(\d+)$")
 def encode_location_hint(hint):
-    assert hint[0] == "ipv4"
+    assert hint[0] in ["ipv4", "ipv6"]
     host, port = hint[1:]
-    return "%s:%d" % (host, port)
+    if hint[0] == "ipv4":
+        return "%s:%d" % (host, port)
+    elif hint[0] == "ipv6":
+        return "ipv6:[%s]:%d" % (host, port)
 def decode_location_hints(hints_s):
     hints = []
     if hints_s:
@@ -785,9 +789,13 @@ def decode_location_hints(hints_s):
             if ":" not in hint_s:
                 raise BadFURLError("bad connection hint '%s' "
                                    "(hostname, but no port)" % hint_s)
-            mo = IPV4_HINT_RE.search(hint_s)
-            if mo:
+            ipv4 = IPV4_HINT_RE.search(hint_s)
+            ipv6 = IPV6_HINT_RE.search(hint_s)
+            if ipv4:
                 hint = ( "ipv4", mo.group(1), int(mo.group(2)) )
+                hints.append(hint)
+            elif ipv6:
+                hint = ( "ipv6", mo.group(1), int(mo.group(2)) )
                 hints.append(hint)
             else:
                 # This is some extension from the future that we will ignore.
