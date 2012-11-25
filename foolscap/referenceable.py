@@ -773,7 +773,7 @@ class BadFURLError(Exception):
 AUTH_STURDYREF_RE = re.compile(r"pb://([^@]+)@([^/]*)/(.+)$")
 NONAUTH_STURDYREF_RE = re.compile(r"pbu://([^/]*)/(.+)$")
 
-IPV4_HINT_RE = re.compile(r"^([^:]+):(\d+)$")
+IPV4_HINT_RE = re.compile(r"^(ipv4:)?([^:]+):(\d+)$")
 IPV6_HINT_RE = re.compile(r"^ipv6:\[([^\.]+)\]:(\d+)$")
 def encode_location_hint(hint):
     assert hint[0] in ["ipv4", "ipv6"]
@@ -792,7 +792,7 @@ def decode_location_hints(hints_s):
             ipv4 = IPV4_HINT_RE.search(hint_s)
             ipv6 = IPV6_HINT_RE.search(hint_s)
             if ipv4:
-                hint = ( "ipv4", ipv4.group(1), int(ipv4.group(2)) )
+                hint = ( "ipv4", ipv4.group(2), int(ipv4.group(3)) )
                 hints.append(hint)
             elif ipv6:
                 hint = ( "ipv6", ipv6.group(1), int(ipv6.group(2)) )
