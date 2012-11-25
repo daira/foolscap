@@ -792,10 +792,10 @@ def decode_location_hints(hints_s):
             ipv4 = IPV4_HINT_RE.search(hint_s)
             ipv6 = IPV6_HINT_RE.search(hint_s)
             if ipv4:
-                hint = ( "ipv4", mo.group(1), int(mo.group(2)) )
+                hint = ( "ipv4", ipv4.group(1), int(ipv4.group(2)) )
                 hints.append(hint)
             elif ipv6:
-                hint = ( "ipv6", mo.group(1), int(mo.group(2)) )
+                hint = ( "ipv6", ipv6.group(1), int(ipv6.group(2)) )
                 hints.append(hint)
             else:
                 # This is some extension from the future that we will ignore.
