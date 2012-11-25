@@ -28,12 +28,16 @@ except ImportError:
 def parse_strport(port):
     if port.startswith("unix:"):
         raise ValueError("UNIX sockets are not supported for Listeners")
-    mo = re.search(r'^(tcp:)?(?P<port>\d+)(:interface=(?P<interface>[\d\.]+))?$', port)
-    if not mo:
+    ipv4 = re.search(r'^(tcp4?:)?(?P<port>\d+)(:interface=(?P<interface>[\d\.]+))?$', port)
+    ipv6 = re.search(r'^(tcp6?:)?(?P<port>\d+)(:interface=\[(?P<interface>[\da-f:]+)\])?$', port)
+    if ipv6:
+        portnum = int(ipv6.group('port'))
+        interface = ipv6.group('interface') or "::0"
+    if ipv4:
+        portnum = int(ipv4.group('port'))
+        interface = ipv4.group('interface') or ""
+    if not (ipv4 or ipv6):
         raise ValueError("Unable to parse port string '%s'" % (port,))
-    portnum = int(mo.group('port'))
-    interface = mo.group('interface') or ""
-    # TODO: IPv6
     return (portnum, interface)
 
 Listeners = []
