@@ -12,7 +12,7 @@ from twisted.application import service, internet
 from foolscap.api import Tub, Referenceable
 from foolscap.logging.interfaces import RILogGatherer, RILogObserver
 from foolscap.logging.incident import IncidentClassifierBase, TIME_FORMAT
-from foolscap.util import get_local_ip_for
+from foolscap.util import get_local_ips_for
 
 class BadTubID(Exception):
     pass
@@ -40,10 +40,11 @@ class GatheringBase(service.MultiService, Referenceable):
         certFile = os.path.join(self.basedir, "gatherer.pem")
         self._tub = self.tub_class(certFile=certFile)
         self._tub.setServiceParent(self)
-        local_addresses = ["127.0.0.1"]
-        local_address = get_local_ip_for()
-        if self.use_local_addresses and local_address:
-            local_addresses.insert(0, local_address)
+        local_addresses = get_local_ips_for()
+        if self.use_local_addresses and local_addresses:
+            local_addresses.append("127.0.0.1")
+        else:
+            local_addresses = ["127.0.0.1"]
 
         portnumfile = os.path.join(self.basedir, "portnum")
         try:

@@ -88,7 +88,7 @@ class SetLocation(unittest.TestCase):
         d.addCallback(flushEventualQueue)
         return d
 
-    def test_set_location(self):
+    def test_set_location4(self):
         t = GoodEnoughTub()
         t.listenOn("tcp:0")
         t.setServiceParent(self.s)
@@ -96,7 +96,15 @@ class SetLocation(unittest.TestCase):
         # setLocation may only be called once
         self.failUnlessRaises(PBError, t.setLocation, "127.0.0.1:12345")
 
-    def test_set_location_automatically(self):
+    def test_set_location6(self):
+        t = GoodEnoughTub()
+        t.listenOn("tcp6:0")
+        t.setServiceParent(self.s)
+        t.setLocation("ipv6:[::1]:12345")
+        # setLocation may only be called once
+        self.failUnlessRaises(PBError, t.setLocation, "ipv6:[::1]:12345")
+
+    def test_set_location_automatically4(self):
         t = GoodEnoughTub()
         l = t.listenOn("tcp:0")
         t.setServiceParent(self.s)
@@ -109,6 +117,28 @@ class SetLocation(unittest.TestCase):
                 for lh in sr.locationHints:
                     self.failUnlessEqual(lh[2], portnum, lh)
                 self.failUnless( ("ipv4", "127.0.0.1", portnum)
+                                 in sr.locationHints)
+            else:
+                # TODO: unauthenticated tubs need review, I think they
+                # deserve to have tubids and multiple connection hints
+                pass
+        d.addCallback(_check)
+        return d
+
+    def test_set_location_automatically6(self):
+        t = GoodEnoughTub()
+        l = t.listenOn("tcp6:0")
+        t.setServiceParent(self.s)
+        d = t.setLocationAutomatically()
+        d.addCallback(lambda res: t.registerReference(Referenceable()))
+        def _check(furl):
+            sr = SturdyRef(furl)
+            portnum = l.getPortnum()
+            if sr.encrypted:
+                for lh in sr.locationHints:
+                    self.failUnlessEqual(lh[2], portnum, lh)
+                print sr.locationHints
+                self.failUnless( ("ipv6", "::1", portnum)
                                  in sr.locationHints)
             else:
                 # TODO: unauthenticated tubs need review, I think they
@@ -130,15 +160,15 @@ class FurlFile(unittest.TestCase):
         d.addCallback(flushEventualQueue)
         return d
 
-    def test_furlfile(self):
-        cfn = "test_tub.FurlFile.test_furlfile.certfile"
+    def test_furlfile4(self):
+        cfn = "test_tub.FurlFile.test_furlfile4.certfile"
         t1 = Tub(certFile=cfn)
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
         port1 = "tcp:%d:interface=127.0.0.1" % l.getPortnum()
         r1 = Referenceable()
-        ffn = "test_tub.FurlFile.test_furlfile.furlfile"
+        ffn = "test_tub.FurlFile.test_furlfile4.furlfile"
         furl1 = t1.registerReference(r1, furlFile=ffn)
         d = defer.maybeDeferred(t1.disownServiceParent)
 
@@ -157,14 +187,41 @@ class FurlFile(unittest.TestCase):
         d.addCallback(_take2)
         return d
 
-    def test_tubid_check(self):
+    def test_furlfile6(self):
+        cfn = "test_tub.FurlFile.test_furlfile6.certfile"
+        t1 = Tub(certFile=cfn)
+        t1.setServiceParent(self.s)
+        l = t1.listenOn("tcp6:0:interface=[::1]")
+        t1.setLocation("ipv6:[::1]:%d" % l.getPortnum())
+        port1 = "tcp6:%d:interface=[::1]" % l.getPortnum()
+        r1 = Referenceable()
+        ffn = "test_tub.FurlFile.test_furlfile6.furlfile"
+        furl1 = t1.registerReference(r1, furlFile=ffn)
+        d = defer.maybeDeferred(t1.disownServiceParent)
+
+        self.failUnless(os.path.exists(ffn))
+        self.failUnlessEqual(furl1, open(ffn,"r").read().strip())
+
+        def _take2(res):
+            t2 = Tub(certFile=cfn)
+            t2.setServiceParent(self.s)
+            l = t2.listenOn(port1)
+            t2.setLocation("ipv6:[::1]:%d" % l.getPortnum())
+            r2 = Referenceable()
+            furl2 = t2.registerReference(r2, furlFile=ffn)
+            self.failUnlessEqual(furl1, furl2)
+            return t2.disownServiceParent()
+        d.addCallback(_take2)
+        return d
+
+    def test_tubid_check4(self):
         t1 = Tub() # gets a new key
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
         port1 = "tcp:%d:interface=127.0.0.1" % l.getPortnum()
         r1 = Referenceable()
-        ffn = "test_tub.FurlFile.test_tubid_check.furlfile"
+        ffn = "test_tub.FurlFile.test_tubid_check4.furlfile"
         furl1 = t1.registerReference(r1, furlFile=ffn)
         d = defer.maybeDeferred(t1.disownServiceParent)
 
@@ -176,6 +233,32 @@ class FurlFile(unittest.TestCase):
             t2.setServiceParent(self.s)
             l = t2.listenOn(port1)
             t2.setLocation("127.0.0.1:%d" % l.getPortnum())
+            r2 = Referenceable()
+            self.failUnlessRaises(WrongTubIdError,
+                                  t2.registerReference, r2, furlFile=ffn)
+            return t2.disownServiceParent()
+        d.addCallback(_take2)
+        return d
+
+    def test_tubid_check6(self):
+        t1 = Tub() # gets a new key
+        t1.setServiceParent(self.s)
+        l = t1.listenOn("tcp6:0:interface=[::1]")
+        t1.setLocation("ipv6:[::1]:%d" % l.getPortnum())
+        port1 = "tcp:%d:interface=[::1]" % l.getPortnum()
+        r1 = Referenceable()
+        ffn = "test_tub.FurlFile.test_tubid_check6.furlfile"
+        furl1 = t1.registerReference(r1, furlFile=ffn)
+        d = defer.maybeDeferred(t1.disownServiceParent)
+
+        self.failUnless(os.path.exists(ffn))
+        self.failUnlessEqual(furl1, open(ffn,"r").read().strip())
+
+        def _take2(res):
+            t2 = Tub() # gets a different key
+            t2.setServiceParent(self.s)
+            l = t2.listenOn(port1)
+            t2.setLocation("ipv6:[::1]:%d" % l.getPortnum())
             r2 = Referenceable()
             self.failUnlessRaises(WrongTubIdError,
                                   t2.registerReference, r2, furlFile=ffn)
@@ -256,7 +339,7 @@ class QueuedStartup(TargetMixin, unittest.TestCase):
 
 
 class NameLookup(TargetMixin, unittest.TestCase):
-
+    # TODO: IPv6?  I don't think this applies.
     # test registerNameLookupHandler
 
     def setUp(self):

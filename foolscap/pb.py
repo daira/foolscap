@@ -536,13 +536,17 @@ class Tub(service.MultiService):
         def _reactor_running(res):
             assert self.running
             # we can't use get_local_ip_for until the reactor is running
-            return util.get_local_ip_for()
+            # TODO: the comment in get_local_ip_for in util specifically states
+            # that we don't need a reactor running...
+            return util.get_local_ips_for()
         d.addCallback(_reactor_running)
 
         def _got_local_ip(local_address):
-            local_addresses = set(extra_addresses)
             if local_address:
-                local_addresses.add(local_address)
+                local_addresses = set(local_address)
+                local_addresses.update(set(extra_addresses))
+            else:
+                local_addresses = set(extra_addresses)
             local_addresses.add("127.0.0.1")
             locations = set()
             for l in self.getListeners():

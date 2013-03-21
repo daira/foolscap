@@ -102,6 +102,7 @@ class Serialize(unittest.TestCase, ShouldFailMixin):
     def test_referenceable(self):
         t1 = GoodEnoughTub()
         t1.setServiceParent(self.s)
+        #TODO: IPv6?
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
         r1 = Referenceable()
@@ -129,6 +130,7 @@ class Serialize(unittest.TestCase, ShouldFailMixin):
         # serialized data will not keep the referenceable alive
         t1 = GoodEnoughTub()
         t1.setServiceParent(self.s)
+        #TODO: IPv6?
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
         r1 = Referenceable()

@@ -58,9 +58,9 @@ class UsefulMixin:
         self.failIf(pb.Listeners)
         return flushEventualQueue()
 
-class TestPersist(UsefulMixin, unittest.TestCase):
+class TestPersist4(UsefulMixin, unittest.TestCase):
     num_services = 2
-    def testPersist(self):
+    def testPersist4(self):
         t1 = Target()
         s1,s2 = self.services
         l1 = s1.listenOn("0")
@@ -69,10 +69,10 @@ class TestPersist(UsefulMixin, unittest.TestCase):
         public_url = s1.registerReference(t1, "name")
         self.failUnless(public_url.startswith("pb:"))
         d = defer.maybeDeferred(s1.stopService)
-        d.addCallback(self._testPersist_1, s1, s2, t1, public_url, port)
+        d.addCallback(self._testPersist4_1, s1, s2, t1, public_url, port)
         return d
-    testPersist.timeout = 5
-    def _testPersist_1(self, res, s1, s2, t1, public_url, port):
+    testPersist4.timeout = 5
+    def _testPersist4_1(self, res, s1, s2, t1, public_url, port):
         self.services.remove(s1)
         s3 = Tub(certData=s1.getCertData())
         s3.startService()
@@ -89,6 +89,36 @@ class TestPersist(UsefulMixin, unittest.TestCase):
         d.addCallback(self.failUnlessEqual, 3)
         d.addCallback(self._testPersist_2, t1, t2)
         return d
+
+    def testPersist6(self):
+        t1 = Target()
+        s1,s2 = self.services
+        l1 = s1.listenOn("tcp6:0")
+        port = l1.getPortnum()
+        s1.setLocation("ipv6:[::1]:%d" % port)
+        public_url = s1.registerReference(t1, "name")
+        self.failUnless(public_url.startswith("pb:"))
+        d = defer.maybeDeferred(s1.stopService)
+        d.addCallback(self._testPersist6_1, s1, s2, t1, public_url, port)
+        return d
+    testPersist6.timeout = 5
+    def _testPersist6_1(self, res, s1, s2, t1, public_url, port):
+        self.services.remove(s1)
+        s3 = Tub(certData=s1.getCertData())
+        s3.startService()
+        self.services.append(s3)
+        t2 = Target()
+        l3 = s3.listenOn("tcp6:0")
+        newport = l3.getPortnum()
+        s3.setLocation("ipv6:[::1]:%d" % newport)
+        s3.registerReference(t2, "name")
+        # now patch the URL to replace the port number
+        newurl = re.sub(":%d/" % port, ":%d/" % newport, public_url)
+        d = s2.getReference(newurl)
+        d.addCallback(lambda rr: rr.callRemote("add", a=1, b=2))
+        d.addCallback(self.failUnlessEqual, 3)
+        d.addCallback(self._testPersist_2, t1, t2)
+        return d
     def _testPersist_2(self, res, t1, t2):
         self.failUnlessEqual(t1.calls, [])
         self.failUnlessEqual(t2.calls, [(1,2)])
@@ -97,7 +127,7 @@ class TestPersist(UsefulMixin, unittest.TestCase):
 class TestListeners(UsefulMixin, unittest.TestCase):
     num_services = 3
 
-    def testListenOn(self):
+    def testListenOn4(self):
         s1 = self.services[0]
         l = s1.listenOn("0")
         self.failUnless(isinstance(l, pb.Listener))
@@ -107,8 +137,17 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         self.failUnlessEqual(len(s1.getListeners()), 0)
         self.failUnlessEqual(len(pb.Listeners), 0)
 
+    def testListenOn6(self):
+        s1 = self.services[0]
+        l = s1.listenOn("tcp6:0")
+        self.failUnless(isinstance(l, pb.Listener))
+        self.failUnlessEqual(len(s1.getListeners()), 1)
+        self.failUnlessEqual(len(pb.Listeners), 1)
+        s1.stopListeningOn(l)
+        self.failUnlessEqual(len(s1.getListeners()), 0)
+        self.failUnlessEqual(len(pb.Listeners), 0)
 
-    def testGetPort1(self):
+    def testGetPort41(self):
         s1,s2,s3 = self.services
         s1.listenOn("0")
         listeners = s1.getListeners()
@@ -116,7 +155,15 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         portnum = listeners[0].getPortnum()
         self.failUnless(portnum) # not 0, not None, must be *something*
 
-    def testGetPort2(self):
+    def testGetPort61(self):
+        s1,s2,s3 = self.services
+        s1.listenOn("tcp6:0")
+        listeners = s1.getListeners()
+        self.failUnlessEqual(len(listeners), 1)
+        portnum = listeners[0].getPortnum()
+        self.failUnless(portnum) # not 0, not None, must be *something*
+
+    def testGetPort42(self):
         s1,s2,s3 = self.services
         s1.listenOn("0")
         listeners = s1.getListeners()
@@ -133,7 +180,24 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         self.failUnlessIdentical(l2[0], l3[0])
         self.failUnlessEqual(l2[0].getPortnum(), l3[0].getPortnum())
 
-    def testShared(self):
+    def testGetPort62(self):
+        s1,s2,s3 = self.services
+        s1.listenOn("tcp6:0")
+        listeners = s1.getListeners()
+        self.failUnlessEqual(len(listeners), 1)
+        portnum = listeners[0].getPortnum()
+        self.failUnless(portnum) # not 0, not None, must be *something*
+        s1.listenOn("tcp6:0") # listen on a second port too
+        l2 = s1.getListeners()
+        self.failUnlessEqual(len(l2), 2)
+        self.failIfEqual(l2[0].getPortnum(), l2[1].getPortnum())
+
+        s2.listenOn(l2[0])
+        l3 = s2.getListeners()
+        self.failUnlessIdentical(l2[0], l3[0])
+        self.failUnlessEqual(l2[0].getPortnum(), l3[0].getPortnum())
+
+    def testShared4(self):
         s1,s2,s3 = self.services
         # s1 and s2 will share a Listener
         l1 = s1.listenOn("tcp:0:interface=127.0.0.1")
@@ -154,13 +218,38 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d.addCallback(lambda ref: ref.callRemote('add', a=2, b=2))
         d.addCallback(self._testShared_1)
         return d
-    testShared.timeout = 5
+
+    def testShared6(self):
+        s1,s2,s3 = self.services
+        # s1 and s2 will share a Listener
+        l1 = s1.listenOn("tcp6:0:interface=[::1]")
+        s1.setLocation("ipv6:[::1]:%d" % l1.getPortnum())
+        s2.listenOn(l1)
+        s2.setLocation("ipv6:[::1]:%d" % l1.getPortnum())
+
+        t1 = Target("one")
+        t2 = Target("two")
+        self.targets = [t1,t2]
+        url1 = s1.registerReference(t1, "target")
+        url2 = s2.registerReference(t2, "target")
+        self.urls = [url1, url2]
+
+        d = s3.getReference(url1)
+        d.addCallback(lambda ref: ref.callRemote('add', a=1, b=1))
+        d.addCallback(lambda res: s3.getReference(url2))
+        d.addCallback(lambda ref: ref.callRemote('add', a=2, b=2))
+        d.addCallback(self._testShared_1)
+        return d
+
+    testShared4.timeout = 5
+    testShared6.timeout = 5
+
     def _testShared_1(self, res):
         t1,t2 = self.targets
         self.failUnlessEqual(t1.calls, [(1,1)])
         self.failUnlessEqual(t2.calls, [(2,2)])
 
-    def testSharedTransfer(self):
+    def testSharedTransfer4(self):
         s1,s2,s3 = self.services
         # s1 and s2 will share a Listener
         l1 = s1.listenOn("tcp:0:interface=127.0.0.1")
@@ -175,15 +264,43 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d = s2.stopService()
         d.addCallback(self._testSharedTransfer_1, l1, s2, s3)
         return d
-    testSharedTransfer.timeout = 5
+
+    def testSharedTransfer6(self):
+        s1,s2,s3 = self.services
+        # s1 and s2 will share a Listener
+        l1 = s1.listenOn("tcp6:0:interface=[::1]")
+        s1.setLocation("ipv6:[::1]:%d" % l1.getPortnum())
+        s2.listenOn(l1)
+        s2.setLocation("ipv6:[::1]:%d" % l1.getPortnum())
+        self.failUnless(l1.parentTub is s1)
+        s1.stopListeningOn(l1)
+        self.failUnless(l1.parentTub is s2)
+        s3.listenOn(l1)
+        self.failUnless(l1.parentTub is s2)
+        d = s2.stopService()
+        d.addCallback(self._testSharedTransfer_1, l1, s2, s3)
+        return d
+
+    testSharedTransfer4.timeout = 5
+    testSharedTransfer6.timeout = 5
+
     def _testSharedTransfer_1(self, res, l1, s2, s3):
         self.services.remove(s2)
         self.failUnless(l1.parentTub is s3)
 
-    def testClone(self):
+    def testClone4(self):
         s1,s2,s3 = self.services
         l1 = s1.listenOn("tcp:0:interface=127.0.0.1")
         s1.setLocation("127.0.0.1:%d" % l1.getPortnum())
+        s4 = s1.clone()
+        s4.startService()
+        self.services.append(s4)
+        self.failUnlessEqual(s1.getListeners(), s4.getListeners())
+
+    def testClone6(self):
+        s1,s2,s3 = self.services
+        l1 = s1.listenOn("tcp6:0:interface=[::1]")
+        s1.setLocation("ipv6:[::1]:%d" % l1.getPortnum())
         s4 = s1.clone()
         s4.startService()
         self.services.append(s4)

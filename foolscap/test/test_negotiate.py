@@ -82,6 +82,7 @@ def getPage(url):
     from twisted.web import client
     scheme, host, port, path = client._parse(url)
     factory = client.HTTPClientFactory(url)
+    #TODO: IPv6?
     c = reactor.connectTCP(host, port, factory)
     def shutdown(res, c):
         c.disconnect()
@@ -140,6 +141,7 @@ class BaseMixin(ShouldFailMixin):
             self.tub = tub = UnauthenticatedTub(options=options)
         tub.startService()
         self.services.append(tub)
+        #TODO: IPv6?
         l = tub.listenOn("tcp:0", listenerOptions)
         tub.setLocation("127.0.0.1:%d" % l.getPortnum())
         self.target = Target()
@@ -151,6 +153,7 @@ class BaseMixin(ShouldFailMixin):
         tub.negotiationClass = negotiationClass
         tub.startService()
         self.services.append(tub)
+        #TODO: IPv6?
         l = tub.listenOn("tcp:0")
         tub.setLocation("127.0.0.1:%d" % l.getPortnum())
         self.target = Target()
@@ -162,6 +165,7 @@ class BaseMixin(ShouldFailMixin):
         tub.negotiationClass = negotiationClass
         tub.startService()
         self.services.append(tub)
+        #TODO: IPv6?
         l = tub.listenOn("tcp:0")
         tub.setLocation("127.0.0.1:%d" % l.getPortnum())
         target = Target()
@@ -170,6 +174,7 @@ class BaseMixin(ShouldFailMixin):
     def makeNullServer(self):
         f = protocol.Factory()
         f.protocol = protocol.Protocol # discards everything
+        #TODO: IPv6?
         s = internet.TCPServer(0, f)
         s.startService()
         self.services.append(s)
@@ -183,6 +188,7 @@ class BaseMixin(ShouldFailMixin):
             raise unittest.SkipTest('this test needs twisted.web')
         root = resource.Resource()
         root.putChild("", static.Data("hello\n", "text/plain"))
+        #TODO: IPv6?
         s = internet.TCPServer(0, server.Site(root))
         s.startService()
         self.services.append(s)
@@ -352,6 +358,7 @@ class Versus(BaseMixin, unittest.TestCase):
         url, portnum = self.makeServer(False, listenerOptions=options)
         f = protocol.ClientFactory()
         f.protocol = protocol.Protocol # discards everything
+        #TODO: IPv6?
         s = internet.TCPClient("127.0.0.1", portnum, f)
         s.startService()
         self.services.append(s)
@@ -387,6 +394,7 @@ class Parallel(BaseMixin, unittest.TestCase):
         self.tub = tub = Tub(options=tubopts)
         tub.startService()
         self.services.append(tub)
+        #TODO: IPv6?
         l1 = tub.listenOn("tcp:0", lo1)
         l2 = tub.listenOn("tcp:0", lo2)
         self.p1, self.p2 = l1.getPortnum(), l2.getPortnum()
@@ -532,6 +540,7 @@ class CrossfireMixin(BaseMixin):
 
         tub1.startService()
         self.services.append(tub1)
+        #TODO: IPv6?
         l1 = tub1.listenOn("tcp:0", lo1)
         tub1.setLocation("127.0.0.1:%d" % l1.getPortnum())
         self.target1 = Target()
@@ -540,6 +549,7 @@ class CrossfireMixin(BaseMixin):
         # connection[1], the abandoned connection, will be from tub2 to tub1
         tub2.startService()
         self.services.append(tub2)
+        #TODO: IPv6?
         l2 = tub2.listenOn("tcp:0", lo2)
         tub2.setLocation("127.0.0.1:%d" % l2.getPortnum())
         self.target2 = Target()
@@ -936,6 +946,7 @@ class Replacement(BaseMixin, unittest.TestCase):
         tub.incarnation_string = oldtub.incarnation_string
         tub.slave_table = oldtub.slave_table.copy()
         tub.master_table = oldtub.master_table.copy()
+        #TODO: IPv6?
         l = tub.listenOn("tcp:0")
         tub.setLocation("127.0.0.1:%d" % l.getPortnum())
         target = Target()

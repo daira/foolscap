@@ -101,6 +101,22 @@ class CLI(RequiresCryptoBase, unittest.TestCase):
         d.addCallback(_check)
         return d
 
+    def test_create5(self):
+        basedir = "appserver/CLI/create5"
+        os.makedirs(basedir)
+        serverdir = os.path.join(basedir, "fl")
+        d = self.run_cli("create", "--port", "tcp6:0", serverdir)
+        def _check((rc,out,err)):
+            self.failUnlessEqual(rc, 0)
+            self.failUnless(os.path.isdir(serverdir))
+            got_port = open(os.path.join(serverdir, "port"), "r").read().strip()
+            self.failIfEqual(got_port, "tcp6:0") # it should pick a real port
+            portnum = int(got_port[got_port.find(":")+1:])
+            prefix = open(os.path.join(serverdir, "furl_prefix"), "r").read().strip()
+            self.failUnless(prefix.endswith(":%d/" % portnum), prefix)
+        d.addCallback(_check)
+        return d
+
     def test_add(self):
         basedir = "appserver/CLI/add"
         os.makedirs(basedir)

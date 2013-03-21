@@ -751,7 +751,7 @@ class Failures(ExamineFailuresMixin, TargetMixin, ShouldFailMixin,
     # TODO: test Tub.setOption("expose-remote-exception-types")
     # TODO: A calls B. B calls C. C raises an exception. What does A get?
 
-class TubFailures(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
+class TubFailures4(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
     def setUp(self):
         self.s = service.MultiService()
         self.s.startService()
@@ -799,7 +799,55 @@ class TubFailures(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
         d.addCallback(self._examine_raise, False)
         return d
 
-class ReferenceCounting(ShouldFailMixin, unittest.TestCase):
+class TubFailures6(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
+    def setUp(self):
+        self.s = service.MultiService()
+        self.s.startService()
+        self.target_tub = UnauthenticatedTub()
+        self.target_tub.setServiceParent(self.s)
+        l = self.target_tub.listenOn("tcp6:0:interface=[::1]")
+        self.target_tub.setLocation("ipv6:[::1]:%d" % l.getPortnum())
+        self.source_tub = UnauthenticatedTub()
+        self.source_tub.setServiceParent(self.s)
+
+    def tearDown(self):
+        return self.s.stopService()
+
+    def setupTarget(self, target):
+        furl = self.target_tub.registerReference(target)
+        d = self.source_tub.getReference(furl)
+        return d
+
+
+    def test_raise_not_exposed(self):
+        self.source_tub.setOption("expose-remote-exception-types", False)
+        d = self.setupTarget(TargetWithoutInterfaces())
+        d.addCallback(lambda rr:
+                      self.shouldFail(RemoteException, "one", None,
+                                      rr.callRemote, "fail"))
+        d.addCallback(self._examine_raise, True)
+        return d
+
+    def test_raise_yes_exposed(self):
+        self.source_tub.setOption("expose-remote-exception-types", True)
+        d = self.setupTarget(TargetWithoutInterfaces())
+        d.addCallback(lambda rr:
+                      self.shouldFail(ValueError, "one", None,
+                                      rr.callRemote, "fail"))
+        d.addCallback(self._examine_raise, False)
+        return d
+
+    def test_raise_default(self):
+        # current default is to expose exceptions. This may change in the
+        # future.
+        d = self.setupTarget(TargetWithoutInterfaces())
+        d.addCallback(lambda rr:
+                      self.shouldFail(ValueError, "one", None,
+                                      rr.callRemote, "fail"))
+        d.addCallback(self._examine_raise, False)
+        return d
+
+class ReferenceCounting6(ShouldFailMixin, unittest.TestCase):
     def setUp(self):
         self.s = service.MultiService()
         self.s.startService()
@@ -807,6 +855,79 @@ class ReferenceCounting(ShouldFailMixin, unittest.TestCase):
         self.target_tub.setServiceParent(self.s)
         l = self.target_tub.listenOn("tcp:0:interface=127.0.0.1")
         self.target_tub.setLocation("127.0.0.1:%d" % l.getPortnum())
+        self.source_tub = UnauthenticatedTub()
+        self.source_tub.setServiceParent(self.s)
+
+    def tearDown(self):
+        return self.s.stopService()
+
+    def setupTarget(self, target):
+        furl = self.target_tub.registerReference(target)
+        d = self.source_tub.getReference(furl)
+        return d
+
+    def test_reference_counting(self):
+        self.source_tub.setOption("expose-remote-exception-types", True)
+        target = HelperTarget()
+        d = self.setupTarget(target)
+        def _stash(rref):
+            # to exercise bug #104, we need to trigger remote Violations, so
+            # we tell the sending side to not use a RemoteInterface. We do
+            # this by reaching inside the RemoteReference and making it
+            # forget
+            rref.tracker.interfaceName = None
+            rref.tracker.interface = None
+            self.rref = rref
+        d.addCallback(_stash)
+
+        # the first call causes an error, which discards all remaining
+        # tokens, including the OPEN tokens for the arguments. The #104 bug
+        # is that this causes the open-count to get out of sync, by -2 (one
+        # for the arguments sequence, one for the list inside it).
+        d.addCallback(lambda ign:
+                      self.shouldFail(Violation, "one", None,
+                                      self.rref.callRemote, "bogus",
+                                      ["one list"]))
+
+        #d.addCallback(lambda ign:
+        #              self.rref.callRemote("set", ["one list"]))
+
+        # a method call that has no arguments (specifically no REFERENCE
+        # sequences) won't notice the loss of sync
+        d.addCallback(lambda ign: self.rref.callRemote("set", 42))
+        def _check_42(ign):
+            self.failUnlessEqual(target.obj, 42)
+        d.addCallback(_check_42)
+        # but when the call takes shared arguments, sync matters
+        l = ["list", 1, 2]
+        s = set([3,4])
+        t = ("tuple", 5, 6)
+        d.addCallback(lambda ign: self.rref.callRemote("set", [t, l, s, t]))
+        def _check_shared(ign):
+            # the off-by-two bug would cause the second tuple shared-ref to
+            # point at the set instead of the first tuple
+            self.failUnlessEqual(type(target.obj), list)
+            one, two, three, four = target.obj
+            self.failUnlessEqual(type(one), tuple)
+            self.failUnlessEqual(one, t)
+            self.failUnlessEqual(type(two), list)
+            self.failUnlessEqual(two, l)
+            self.failUnlessEqual(type(three), set)
+            self.failUnlessEqual(three, s)
+            self.failUnlessEqual(type(four), tuple) # this is where it fails
+            self.failUnlessEqual(four, t)
+            self.failUnlessIdentical(one, four)
+        d.addCallback(_check_shared)
+        return d
+
+class ReferenceCounting6(ShouldFailMixin, unittest.TestCase):
+    def setUp(self):
+        self.s = service.MultiService()
+        self.s.startService()
+        self.target_tub = UnauthenticatedTub()
+        self.target_tub.setServiceParent(self.s)
+        l = self.target_tub.listenOn("tcp6:0:interface=[::1]")
+        self.target_tub.setLocation("ipv6:[::1]:%d" % l.getPortnum())
         self.source_tub = UnauthenticatedTub()
         self.source_tub.setServiceParent(self.s)
 

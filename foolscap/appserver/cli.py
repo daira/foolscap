@@ -2,7 +2,7 @@
 import os, sys, shutil, errno, time, signal
 from StringIO import StringIO
 from twisted.python import usage
-from twisted.internet import defer
+from twisted.internet import defer, address
 from twisted.scripts import twistd
 
 # does "flappserver start" need us to refrain from importing the reactor here?
@@ -136,8 +136,12 @@ class Create:
             # write down the one we actually got, so we'll keep using the
             # same one later
             pieces[pieces.index("0")] = str(l0.getPortnum())
-            if pieces[0] != "tcp":
-                pieces = ["tcp"] + pieces
+            if pieces[0][:3] != "tcp":
+                if isinstance(l0.s._port.getHost(), address.IPv6Address):
+                    addrType='tcp6'
+                elif isinstance(l0.s._port.getHost(), address.IPv4Address):
+                    addrType='tcp4'
+                pieces = [addrType] + pieces
             got_port = ":".join(pieces)
             f = open(os.path.join(basedir, "port"), "w")
             f.write(got_port + "\n")

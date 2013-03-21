@@ -17,6 +17,7 @@ class Reconnector(unittest.TestCase):
         self.tubA, self.tubB = self.services
         for s in self.services:
             s.startService()
+            #TODO: IPv6?
             l = s.listenOn("tcp:0:interface=127.0.0.1")
             s.setLocation("127.0.0.1:%d" % l.getPortnum())
 
@@ -89,6 +90,7 @@ class Reconnector(unittest.TestCase):
             self.failUnlessEqual(len(connects), 0)
             self.services.append(tubC)
             tubC.startService()
+            #TODO: IPv6?
             tubC.listenOn("tcp:%d:interface=127.0.0.1" % portb)
             tubC.setLocation("127.0.0.1:%d" % portb)
             url2 = tubC.registerReference(target, "target")
@@ -122,6 +124,7 @@ class Reconnector(unittest.TestCase):
             return self.tubB.stopListeningOn(l)
         d.addCallback(_failed_a_few_times)
         def _stopped(res):
+            #TODO: IPv6?
             self.tubB.listenOn("tcp:%d:interface=127.0.0.1" % portb)
             # the next time the reconnector tries, it should succeed
             return d1
@@ -161,6 +164,7 @@ class Reconnector(unittest.TestCase):
             # both UnauthenticatedTubs)
             self.services.append(tubC)
             tubC.startService()
+            #TODO: IPv6?
             tubC.listenOn("tcp:%d:interface=127.0.0.1" % portb)
             tubC.setLocation("127.0.0.1:%d" % portb)
             url2 = tubC.registerReference(target, "target")

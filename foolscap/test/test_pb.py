@@ -394,6 +394,7 @@ class TestCallable(unittest.TestCase):
         self.tub_ports = []
         for s in self.services:
             s.startService()
+            #TODO: IPv6?
             l = s.listenOn("tcp:0:interface=127.0.0.1")
             s.setLocation("127.0.0.1:%d" % l.getPortnum())
             self.tub_ports.append(l.getPortnum())
@@ -431,6 +432,7 @@ class TestCallable(unittest.TestCase):
             self.failUnlessEqual(sr.getURL(), url)
             peer = rref.getPeer()
             self.failUnless(IAddress.providedBy(peer))
+            #TODO: IPv6?
             self.failUnlessEqual(peer.type, "TCP")
             self.failUnlessEqual(peer.host, "127.0.0.1")
             self.failUnlessEqual(rref.getRemoteTubID(), self.tubB.getTubID())
@@ -562,6 +564,7 @@ class TestService(unittest.TestCase):
 
     def testRegister(self):
         s = self.services[0]
+        #TODO: IPv6?
         l = s.listenOn("tcp:0:interface=127.0.0.1")
         s.setLocation("127.0.0.1:%d" % l.getPortnum())
         t1 = Target()
@@ -595,6 +598,7 @@ class TestService(unittest.TestCase):
         s1 = self.services[0]
         s2 = self.services[1]
         s2.startService()
+        #TODO: IPv6?
         l = s1.listenOn("tcp:0:interface=127.0.0.1")
         s1.setLocation("127.0.0.1:%d" % l.getPortnum())
         public_url = s1.registerReference(target, "target")

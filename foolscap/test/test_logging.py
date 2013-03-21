@@ -448,6 +448,7 @@ class Publish(PollMixin, unittest.TestCase):
         return d
 
     def test_logport_furlfile1(self):
+        #TODO IPv6?
         basedir = "logging/Publish/logport_furlfile1"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -464,6 +465,7 @@ class Publish(PollMixin, unittest.TestCase):
         self.failUnlessEqual(logport_furl, t.getLogPortFURL())
 
     def test_logport_furlfile2(self):
+        #TODO IPv6?
         basedir = "logging/Publish/logport_furlfile2"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -480,6 +482,7 @@ class Publish(PollMixin, unittest.TestCase):
         self.failUnlessEqual(logport_furl, t.getLogPortFURL())
 
     def test_logpublisher(self):
+        #TODO IPv6?
         basedir = "logging/Publish/logpublisher"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -602,6 +605,7 @@ class Publish(PollMixin, unittest.TestCase):
         return d
 
     def test_logpublisher_overload(self):
+        #TODO IPv6?
         basedir = "logging/Publish/logpublisher_overload"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -661,6 +665,7 @@ class Publish(PollMixin, unittest.TestCase):
         return d
 
     def test_logpublisher_catchup(self):
+        #TODO IPv6?
         basedir = "logging/Publish/logpublisher_catchup"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -783,6 +788,7 @@ class IncidentPublisher(PollMixin, unittest.TestCase):
 
 
     def test_get_incidents(self):
+        #TODO IPv6?
         basedir = "logging/IncidentPublisher/get_incidents"
         os.makedirs(basedir)
         furlfile = os.path.join(basedir, "logport.furl")
@@ -862,6 +868,7 @@ class IncidentPublisher(PollMixin, unittest.TestCase):
         self.failUnlessEqual(events[0]["message"], "one")
 
     def test_subscribe(self):
+        #TODO IPv6?
         basedir = "logging/IncidentPublisher/subscribe"
         os.makedirs(basedir)
         t = GoodEnoughTub()
@@ -1005,6 +1012,7 @@ class IncidentGatherer(unittest.TestCase,
         return ig
 
     def create_connected_tub(self, ig):
+        #TODO IPv6?
         t = GoodEnoughTub()
         t.logger = self.logger
         t.setServiceParent(self.parent)
@@ -1274,6 +1282,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
         self.failUnless("running in the wrong directory" in str(e))
 
     def test_log_gatherer(self):
+        #TODO IPv6?
         # setLocation, then set log-gatherer-furl. Also, use bzip=True for
         # this one test.
         basedir = "logging/Gatherer/log_gatherer"
@@ -1311,6 +1320,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer.timeout = 20
 
     def test_log_gatherer_multiple(self):
+        #TODO IPv6?
         # setLocation, then set log-gatherer-furl.
         basedir = "logging/Gatherer/log_gatherer_multiple"
         os.makedirs(basedir)
@@ -1361,6 +1371,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer_multiple.timeout = 40
 
     def test_log_gatherer2(self):
+        #TODO IPv6?
         # set log-gatherer-furl, then setLocation. Also, use a timed rotator.
         basedir = "logging/Gatherer/log_gatherer2"
         os.makedirs(basedir)
@@ -1391,6 +1402,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer2.timeout = 20
 
     def test_log_gatherer_furlfile(self):
+        #TODO IPv6?
         # setLocation, then set log-gatherer-furlfile
         basedir = "logging/Gatherer/log_gatherer_furlfile"
         os.makedirs(basedir)
@@ -1421,6 +1433,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer_furlfile.timeout = 20
 
     def test_log_gatherer_furlfile2(self):
+        #TODO IPv6?
         # set log-gatherer-furlfile, then setLocation
         basedir = "logging/Gatherer/log_gatherer_furlfile2"
         os.makedirs(basedir)
@@ -1455,6 +1468,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer_furlfile2.timeout = 20
 
     def test_log_gatherer_furlfile_multiple(self):
+        #TODO IPv6?
         basedir = "logging/Gatherer/log_gatherer_furlfile_multiple"
         os.makedirs(basedir)
 
@@ -1518,6 +1532,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer_furlfile_multiple.timeout = 20
 
     def test_log_gatherer_empty_furlfile(self):
+        #TODO IPv6?
         basedir = "logging/Gatherer/log_gatherer_empty_furlfile"
         os.makedirs(basedir)
 
@@ -1537,6 +1552,7 @@ class Gatherer(unittest.TestCase, LogfileReaderMixin, StallMixin, PollMixin):
     test_log_gatherer_empty_furlfile.timeout = 20
 
     def test_log_gatherer_missing_furlfile(self):
+        #TODO IPv6?
         basedir = "logging/Gatherer/log_gatherer_missing_furlfile"
         os.makedirs(basedir)
 
@@ -2047,6 +2063,7 @@ class Web(unittest.TestCase):
         return d
 
     def test_basic(self):
+        #TODO IPv6?
         from twisted.web import client
         basedir = "logging/Web/basic"
         os.makedirs(basedir)
