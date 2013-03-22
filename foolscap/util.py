@@ -81,46 +81,6 @@ def get_local_ips_for(target='A.ROOT-SERVERS.NET'):
         localip = None
     port.stopListening() # note, this returns a Deferred
     return [localip]
-def get_local_ip_for(target='A.ROOT-SERVERS.NET'):
-    """Find out what our IP address is for use by a given target.
-
-    @return: the IP address as a dotted-quad string which could be used by
-              to connect to us. It might work for them, it might not. If
-              there is no suitable address (perhaps we don't currently have an
-              externally-visible interface), this will return an empty list.
-    """
-
-    try:
-        target_ipaddrs = set([ addr[4][0] for addr in socket.getaddrinfo(target, None) ])
-    except socket.gaierror:
-        # DNS isn't running, or somehow we encountered an error
-
-        # note: if an interface is configured and up, but nothing is
-        # connected to it, gethostbyname("A.ROOT-SERVERS.NET") will take 20
-        # seconds to raise socket.gaierror . This is synchronous and occurs
-        # for each node being started, so users of
-        # test.common.SystemTestMixin (like test_system) will see something
-        # like 120s of delay, which may be enough to hit the default trial
-        # timeouts. For that reason, get_local_addresses_async() was changed
-        # to default to the numerical ip address for A.ROOT-SERVERS.NET, to
-        # avoid this DNS lookup. This also makes node startup fractionally
-        # faster.
-        return []
-    print target_ipaddrs
-    localips = []
-    for target_ipaddr in target_ipaddrs:
-        udpprot = protocol.DatagramProtocol()
-        port = reactor.listenUDP(0, udpprot)
-        try:
-            udpprot.transport.connect(target_ipaddr, 7)
-            localip = udpprot.transport.getHost().host
-            localips.append(localip)
-        except ValueError, socket.error:
-            # ValueError will fire on IPv6 until http://twistedmatrix.com/trac/ticket/5087 is fixed; no route to that host
-            pass
-        port.stopListening() # note, this returns a Deferred
-    print localips
-    return localips
 
 FORMAT_TIME_MODES = ["short-local", "long-local", "utc", "epoch"]
 def format_time(when, mode):
