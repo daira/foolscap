@@ -106,7 +106,7 @@ class SetLocation(unittest.TestCase):
 
     def test_set_location_automatically(self):
         t = GoodEnoughTub()
-        l = t.listenOn("tcp:0")
+        l = t.listenOn("tcp6:0")
         t.setServiceParent(self.s)
         d = t.setLocationAutomatically()
         d.addCallback(lambda res: t.registerReference(Referenceable()))
