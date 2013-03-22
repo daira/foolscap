@@ -104,7 +104,7 @@ class SetLocation(unittest.TestCase):
         # setLocation may only be called once
         self.failUnlessRaises(PBError, t.setLocation, "ipv6:[::1]:12345")
 
-    def test_set_location_automatically4(self):
+    def test_set_location_automatically(self):
         t = GoodEnoughTub()
         l = t.listenOn("tcp:0")
         t.setServiceParent(self.s)
@@ -118,26 +118,6 @@ class SetLocation(unittest.TestCase):
                     self.failUnlessEqual(lh[2], portnum, lh)
                 self.failUnless( ("ipv4", "127.0.0.1", portnum)
                                  in sr.locationHints)
-            else:
-                # TODO: unauthenticated tubs need review, I think they
-                # deserve to have tubids and multiple connection hints
-                pass
-        d.addCallback(_check)
-        return d
-
-    def test_set_location_automatically6(self):
-        t = GoodEnoughTub()
-        l = t.listenOn("tcp6:0")
-        t.setServiceParent(self.s)
-        d = t.setLocationAutomatically()
-        d.addCallback(lambda res: t.registerReference(Referenceable()))
-        def _check(furl):
-            sr = SturdyRef(furl)
-            portnum = l.getPortnum()
-            if sr.encrypted:
-                for lh in sr.locationHints:
-                    self.failUnlessEqual(lh[2], portnum, lh)
-                print sr.locationHints
                 self.failUnless( ("ipv6", "::1", portnum)
                                  in sr.locationHints)
             else:
@@ -146,8 +126,6 @@ class SetLocation(unittest.TestCase):
                 pass
         d.addCallback(_check)
         return d
-
-
 
 class FurlFile(unittest.TestCase):
 
