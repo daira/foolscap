@@ -88,25 +88,39 @@ class URL(unittest.TestCase):
                             f)
         _check(f, "127.0.0.1")
 
-        furl = "pb://%s@ipv6:[::1]/name" % TUB1 # missing portnum
-        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
-        _check(f, "ipv6:[::1]")
-
-        furl = "pb://%s@ipv6:::1/name" % TUB1 # missing portnum and brakets
-        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
-        _check(f, "ipv6:::1")
-
         furl = "pb://%s@example.com/name" % TUB1 # missing portnum
-        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
-        _check(f, "example.com")
-
-        furl = "pb://%s@ipv6:example.com/name" % TUB1 # missing portnum
         f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
         _check(f, "example.com")
 
         furl = "pb://%s@,/name" % TUB1 # empty hints are not allowed
         f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
         _check(f, "")
+
+        def _checkipv(f, hostname):
+            self.failUnless(("bad connection hint '%s' "
+                             "(specifies ipv[46]:, but doesn't contain"
+                             " an ipv[46] hint)" % hostname) in str(f),
+                            f)
+
+        furl = "pb://%s@ipv6:[example.com]/name" % TUB1 # missing portnum
+        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
+        _checkipv(f, "ipv6:[example.com]")
+
+        furl = "pb://%s@ipv6:example.com/name" % TUB1 # ipv6 without brakets
+        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
+        _checkipv(f, "ipv6:example.com")
+
+        furl = "pb://%s@ipv4:[example.com]/name" % TUB1 # ipv4 with brakets
+        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
+        _checkipv(f, "ipv4:[example.com]")
+
+        furl = "pb://%s@ipv6:[::1]/name" % TUB1 # missing portnum
+        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
+        _checkipv(f, "ipv6:[::1]")
+
+        furl = "pb://%s@ipv6:::1/name" % TUB1 # missing portnum and brakets
+        f = self.failUnlessRaises(BadFURLError, SturdyRef, furl)
+        _checkipv(f, "ipv6:::1")
 
         furl = "pb://%s@/name" % TUB1 # this is ok, and means "unrouteable"
         sr = SturdyRef(furl)

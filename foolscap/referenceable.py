@@ -773,7 +773,7 @@ class BadFURLError(Exception):
 AUTH_STURDYREF_RE = re.compile(r"pb://([^@]+)@([^/]*)/(.+)$")
 NONAUTH_STURDYREF_RE = re.compile(r"pbu://([^/]*)/(.+)$")
 
-IPV4_HINT_RE = re.compile(r"^(ipv4:)?([^:]+):(\d+)$")
+IPV4_HINT_RE = re.compile(r"^(?:ipv4:)?([^:\[\]]+):(\d+)$")
 IPV6_HINT_RE = re.compile(r"^ipv6:\[([^\.]+)\]:(\d+)$")
 def encode_location_hint(hint):
     assert hint[0] in ["ipv4", "ipv6"]
@@ -792,12 +792,16 @@ def decode_location_hints(hints_s):
             ipv4 = IPV4_HINT_RE.search(hint_s)
             ipv6 = IPV6_HINT_RE.search(hint_s)
             if ipv4:
-                hint = ( "ipv4", ipv4.group(2), int(ipv4.group(3)) )
+                hint = ( "ipv4", ipv4.group(1), int(ipv4.group(2)) )
                 hints.append(hint)
             elif ipv6:
                 hint = ( "ipv6", ipv6.group(1), int(ipv6.group(2)) )
                 hints.append(hint)
             else:
+                if hint_s[:5] == "ipv4:" or hint_s[:5] == "ipv6:":
+                    raise BadFURLError("bad connection hint '%s' "
+                            "(specifies ipv[46]:, but doesn't contain an ipv[46] hint)" % hint_s)
+
                 # This is some extension from the future that we will ignore.
                 # All extensions are required to start with "TYPE:" (where
                 # TYPE is alphanumeric), and then can contain any characters
@@ -807,7 +811,8 @@ def decode_location_hints(hints_s):
                 # "foo:" and "bar:stuff" and "baz:12stuff" and
                 # "foo:1234:stuff" and "foo:123:456" and "foo:123:" are all
                 # valid extensions, but "foo:123" is not (it looks like
-                # host="foo" and port="123").
+                # host="foo" and port="123"). TYPE: also must not start with
+                # another type's type, so ipv4:foo: is an invalid type.
                 pass
     return hints
 

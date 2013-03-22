@@ -107,11 +107,10 @@ def get_local_ip_for(target='A.ROOT-SERVERS.NET'):
         # faster.
         return []
     print target_ipaddrs
-    udpprot = protocol.DatagramProtocol()
-    port = reactor.listenUDP(0, udpprot)
     localips = []
     for target_ipaddr in target_ipaddrs:
-        if target_ipaddr in localips: continue
+        udpprot = protocol.DatagramProtocol()
+        port = reactor.listenUDP(0, udpprot)
         try:
             udpprot.transport.connect(target_ipaddr, 7)
             localip = udpprot.transport.getHost().host
