@@ -805,7 +805,7 @@ class TubFailures6(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
         self.s.startService()
         self.target_tub = UnauthenticatedTub()
         if not self.target_tub.ipv6_enabled:
-            raise unittest.skipTest("IPv6 not enabled, skipping")
+            raise unittest.SkipTest("IPv6 not enabled, skipping")
         self.target_tub.setServiceParent(self.s)
         l = self.target_tub.listenOn("tcp6:0:interface=[::1]")
         self.target_tub.setLocation("ipv6:[::1]:%d" % l.getPortnum())
@@ -849,11 +849,13 @@ class TubFailures6(ExamineFailuresMixin, ShouldFailMixin, unittest.TestCase):
         d.addCallback(self._examine_raise, False)
         return d
 
-class ReferenceCounting6(ShouldFailMixin, unittest.TestCase):
+class ReferenceCounting4(ShouldFailMixin, unittest.TestCase):
     def setUp(self):
         self.s = service.MultiService()
         self.s.startService()
         self.target_tub = UnauthenticatedTub()
+        if not self.target_tub.ipv4_enabled:
+            raise unittest.SkipTest("IPv4 not enabled, skipping")
         self.target_tub.setServiceParent(self.s)
         l = self.target_tub.listenOn("tcp:0:interface=127.0.0.1")
         self.target_tub.setLocation("127.0.0.1:%d" % l.getPortnum())
@@ -927,6 +929,8 @@ class ReferenceCounting6(ShouldFailMixin, unittest.TestCase):
         self.s = service.MultiService()
         self.s.startService()
         self.target_tub = UnauthenticatedTub()
+        if not self.target_tub.ipv6_enabled:
+            raise unittest.SkipTest("IPv6 not enabled, skipping")
         self.target_tub.setServiceParent(self.s)
         l = self.target_tub.listenOn("tcp6:0:interface=[::1]")
         self.target_tub.setLocation("ipv6:[::1]:%d" % l.getPortnum())

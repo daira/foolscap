@@ -4,7 +4,7 @@ from twisted.trial import unittest
 
 from zope.interface import implements
 from twisted.internet import defer
-from foolscap import pb
+from foolscap import pb, util
 from foolscap.api import RemoteInterface, Referenceable, Tub, flushEventualQueue
 from foolscap.remoteinterface import RemoteMethodSchema
 from foolscap.test.common import crypto_available
@@ -58,8 +58,9 @@ class UsefulMixin:
         self.failIf(pb.Listeners)
         return flushEventualQueue()
 
-class TestPersist4(UsefulMixin, unittest.TestCase):
+class TestPersist(UsefulMixin, unittest.TestCase):
     num_services = 2
+    (ipv4_enabled, ipv6_enabled, ip_dual_stack) = util.determineHostIPCapability()
     def testPersist4(self):
         t1 = Target()
         s1,s2 = self.services
@@ -71,7 +72,10 @@ class TestPersist4(UsefulMixin, unittest.TestCase):
         d = defer.maybeDeferred(s1.stopService)
         d.addCallback(self._testPersist4_1, s1, s2, t1, public_url, port)
         return d
-    testPersist4.timeout = 5
+    if not ipv4_enabled:
+        testPersist4.skip = "No IPv4, skipping"
+    else:
+        testPersist4.timeout = 5
     def _testPersist4_1(self, res, s1, s2, t1, public_url, port):
         self.services.remove(s1)
         s3 = Tub(certData=s1.getCertData())
@@ -101,7 +105,10 @@ class TestPersist4(UsefulMixin, unittest.TestCase):
         d = defer.maybeDeferred(s1.stopService)
         d.addCallback(self._testPersist6_1, s1, s2, t1, public_url, port)
         return d
-    testPersist6.timeout = 5
+    if not ipv6_enabled:
+        testPersist6.skip = "No IPv6, skipping"
+    else:
+        testPersist6.timeout = 5
     def _testPersist6_1(self, res, s1, s2, t1, public_url, port):
         self.services.remove(s1)
         s3 = Tub(certData=s1.getCertData())
@@ -119,23 +126,26 @@ class TestPersist4(UsefulMixin, unittest.TestCase):
         d.addCallback(self.failUnlessEqual, 3)
         d.addCallback(self._testPersist_2, t1, t2)
         return d
+
     def _testPersist_2(self, res, t1, t2):
         self.failUnlessEqual(t1.calls, [])
         self.failUnlessEqual(t2.calls, [(1,2)])
 
-
 class TestListeners(UsefulMixin, unittest.TestCase):
     num_services = 3
+    (ipv4_enabled, ipv6_enabled, ip_dual_stack) = util.determineHostIPCapability()
 
     def testListenOn4(self):
         s1 = self.services[0]
-        l = s1.listenOn("0")
+        l = s1.listenOn("tcp:0")
         self.failUnless(isinstance(l, pb.Listener))
         self.failUnlessEqual(len(s1.getListeners()), 1)
         self.failUnlessEqual(len(pb.Listeners), 1)
         s1.stopListeningOn(l)
         self.failUnlessEqual(len(s1.getListeners()), 0)
         self.failUnlessEqual(len(pb.Listeners), 0)
+    if not ipv4_enabled:
+        testListenOn4.skip = "No IPv4, skipping"
 
     def testListenOn6(self):
         s1 = self.services[0]
@@ -146,6 +156,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         s1.stopListeningOn(l)
         self.failUnlessEqual(len(s1.getListeners()), 0)
         self.failUnlessEqual(len(pb.Listeners), 0)
+    if not ipv6_enabled:
+        testListenOn6.skip = "No IPv6, skipping"
 
     def testGetPort41(self):
         s1,s2,s3 = self.services
@@ -154,6 +166,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         self.failUnlessEqual(len(listeners), 1)
         portnum = listeners[0].getPortnum()
         self.failUnless(portnum) # not 0, not None, must be *something*
+    if not ipv4_enabled:
+        testGetPort41.skip = "No IPv4, skipping"
 
     def testGetPort61(self):
         s1,s2,s3 = self.services
@@ -162,6 +176,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         self.failUnlessEqual(len(listeners), 1)
         portnum = listeners[0].getPortnum()
         self.failUnless(portnum) # not 0, not None, must be *something*
+    if not ipv6_enabled:
+        testGetPort61.skip = "No IPv6, skipping"
 
     def testGetPort42(self):
         s1,s2,s3 = self.services
@@ -179,6 +195,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         l3 = s2.getListeners()
         self.failUnlessIdentical(l2[0], l3[0])
         self.failUnlessEqual(l2[0].getPortnum(), l3[0].getPortnum())
+    if not ipv4_enabled:
+        testGetPort42.skip = "No IPv4, skipping"
 
     def testGetPort62(self):
         s1,s2,s3 = self.services
@@ -196,6 +214,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         l3 = s2.getListeners()
         self.failUnlessIdentical(l2[0], l3[0])
         self.failUnlessEqual(l2[0].getPortnum(), l3[0].getPortnum())
+    if not ipv6_enabled:
+        testGetPort62.skip = "No IPv6, skipping"
 
     def testShared4(self):
         s1,s2,s3 = self.services
@@ -218,6 +238,10 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d.addCallback(lambda ref: ref.callRemote('add', a=2, b=2))
         d.addCallback(self._testShared_1)
         return d
+    if not ipv4_enabled:
+        testShared4.skip = "No IPv4, skipping"
+    else:
+        testShared4.timeout = 5
 
     def testShared6(self):
         s1,s2,s3 = self.services
@@ -240,9 +264,11 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d.addCallback(lambda ref: ref.callRemote('add', a=2, b=2))
         d.addCallback(self._testShared_1)
         return d
+    if not ipv6_enabled:
+        testShared6.skip = "No IPv6, skipping"
+    else:
+        testShared6.timeout = 5
 
-    testShared4.timeout = 5
-    testShared6.timeout = 5
 
     def _testShared_1(self, res):
         t1,t2 = self.targets
@@ -264,6 +290,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d = s2.stopService()
         d.addCallback(self._testSharedTransfer_1, l1, s2, s3)
         return d
+    if not ipv4_enabled:
+        testSharedTransfer4.skip = "No IPv4, skipping"
 
     def testSharedTransfer6(self):
         s1,s2,s3 = self.services
@@ -280,6 +308,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         d = s2.stopService()
         d.addCallback(self._testSharedTransfer_1, l1, s2, s3)
         return d
+    if not ipv6_enabled:
+        testSharedTransfer6.skip = "No IPv6, skipping"
 
     testSharedTransfer4.timeout = 5
     testSharedTransfer6.timeout = 5
@@ -296,6 +326,8 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         s4.startService()
         self.services.append(s4)
         self.failUnlessEqual(s1.getListeners(), s4.getListeners())
+    if not ipv4_enabled:
+        testClone4.skip = "No IPv4, skipping"
 
     def testClone6(self):
         s1,s2,s3 = self.services
@@ -305,3 +337,5 @@ class TestListeners(UsefulMixin, unittest.TestCase):
         s4.startService()
         self.services.append(s4)
         self.failUnlessEqual(s1.getListeners(), s4.getListeners())
+    if not ipv6_enabled:
+        testClone6.skip = "No IPv6, skipping"

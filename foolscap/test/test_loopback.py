@@ -36,6 +36,8 @@ class ConnectToSelf(unittest.TestCase):
 
     def testConnectUnauthenticated4(self):
         tub = UnauthenticatedTub()
+        if not tub.ipv4_enabled:
+            raise unittest.SkipTest("No IPv4, skipping")
         self.startTub4(tub)
         target = HelperTarget("bob")
         target.obj = "unset"
@@ -60,6 +62,8 @@ class ConnectToSelf(unittest.TestCase):
 
     def testConnectUnauthenticated6(self):
         tub = UnauthenticatedTub()
+        if not tub.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         self.startTub6(tub)
         target = HelperTarget("bob")
         target.obj = "unset"
@@ -85,6 +89,8 @@ class ConnectToSelf(unittest.TestCase):
     def testConnectAuthenticated4(self):
         self.requireCrypto()
         tub = Tub()
+        if not tub.ipv4_enabled:
+            raise unittest.SkipTest("No IPv4, skipping")
         self.startTub4(tub)
         target = HelperTarget("bob")
         target.obj = "unset"
@@ -108,6 +114,8 @@ class ConnectToSelf(unittest.TestCase):
     def testConnectAuthenticated6(self):
         self.requireCrypto()
         tub = Tub()
+        if not tub.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         self.startTub6(tub)
         target = HelperTarget("bob")
         target.obj = "unset"

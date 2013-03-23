@@ -106,7 +106,11 @@ class SetLocation(unittest.TestCase):
 
     def test_set_location_automatically(self):
         t = GoodEnoughTub()
-        l = t.listenOn("tcp6:0")
+        if t.ip_dual_stack or t.ipv6_enabled:
+            l = t.listenOn("tcp6:0")
+        if t.ipv4_enabled and not t.ip_dual_stack:
+            l = t.listenOn("tcp:0")
+
         t.setServiceParent(self.s)
         d = t.setLocationAutomatically()
         d.addCallback(lambda res: t.registerReference(Referenceable()))
@@ -116,9 +120,11 @@ class SetLocation(unittest.TestCase):
             if sr.encrypted:
                 for lh in sr.locationHints:
                     self.failUnlessEqual(lh[2], portnum, lh)
-                self.failUnless( ("ipv4", "127.0.0.1", portnum)
+                if t.ip_dual_stack or t.ipv6_enabled:
+                    self.failUnless( ("ipv6", "::1", portnum)
                                  in sr.locationHints)
-                self.failUnless( ("ipv6", "::1", portnum)
+                if t.ipv4_enabled and not t.ip_dual_stack:
+                    self.failUnless( ("ipv4", "127.0.0.1", portnum)
                                  in sr.locationHints)
             else:
                 # TODO: unauthenticated tubs need review, I think they
@@ -141,6 +147,8 @@ class FurlFile(unittest.TestCase):
     def test_furlfile4(self):
         cfn = "test_tub.FurlFile.test_furlfile4.certfile"
         t1 = Tub(certFile=cfn)
+        if not t1.ipv4_enabled:
+            raise unittest.SkipTest("No IPv4, skipping")
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
@@ -168,6 +176,8 @@ class FurlFile(unittest.TestCase):
     def test_furlfile6(self):
         cfn = "test_tub.FurlFile.test_furlfile6.certfile"
         t1 = Tub(certFile=cfn)
+        if not t1.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp6:0:interface=[::1]")
         t1.setLocation("ipv6:[::1]:%d" % l.getPortnum())
@@ -194,6 +204,8 @@ class FurlFile(unittest.TestCase):
 
     def test_tubid_check4(self):
         t1 = Tub() # gets a new key
+        if not t1.ipv4_enabled:
+            raise unittest.SkipTest("No IPv4, skipping")
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp:0:interface=127.0.0.1")
         t1.setLocation("127.0.0.1:%d" % l.getPortnum())
@@ -220,6 +232,8 @@ class FurlFile(unittest.TestCase):
 
     def test_tubid_check6(self):
         t1 = Tub() # gets a new key
+        if not t1.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         t1.setServiceParent(self.s)
         l = t1.listenOn("tcp6:0:interface=[::1]")
         t1.setLocation("ipv6:[::1]:%d" % l.getPortnum())
