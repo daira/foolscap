@@ -245,42 +245,7 @@ class Tub(service.MultiService):
             self.setupEncryptionFile(certFile)
         else:
             self.setupEncryption(certData)
-
-        try:
-            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s.bind(('::', 0))
-            s.listen()
-            self.ipv6_enabled = True
-            s.close()
-        except:
-            self.ipv6_enabled = False
-            s.close()
-
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(('0.0.0.0', 0))
-            s.listen()
-            self.ipv4_enabled = True
-            s.close()
-        except:
-            self.ipv4_enabled = False
-            s.close()
-
-        if self.ipv6_enabled and self.ipv4_enabled:
-            try:
-                s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-                s6.bind(('::', 0))
-                s6.listen()
-                s4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s4.bind(('0.0.0.0', s6.getsockname()[1]))
-                s4.listen()
-                self.ip_dual_stack = True
-                s4.close()
-                s6.close()
-            except:
-                self.ip_dual_stack = False
-                s4.close()
-                s6.close()
+        (self.ipv4_enabled, self.ipv6_enabled, self.ip_dual_stack) = util.determineHostIPCapability()
 
     def __repr__(self):
         return "<Tub id=%s>" % self.tubID
@@ -1147,43 +1112,7 @@ class UnauthenticatedTub(Tub):
         self.myCertificate = None
         assert not tubID # not yet
         self.tubID = tubID
-
-        try:
-            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s.bind(('::', 0))
-            s.listen()
-            self.ipv6_enabled = True
-            s.close()
-        except:
-            self.ipv6_enabled = False
-            s.close()
-
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(('0.0.0.0', 0))
-            s.listen()
-            self.ipv4_enabled = True
-            s.close()
-        except:
-            self.ipv4_enabled = False
-            s.close()
-
-        if self.ipv6_enabled and self.ipv4_enabled:
-            try:
-                s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-                s6.bind(('::', 0))
-                s6.listen()
-                s4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s4.bind(('0.0.0.0', s6.getsockname()[1]))
-                s4.listen()
-                self.ip_dual_stack = True
-                s4.close()
-                s6.close()
-            except:
-                self.ip_dual_stack = False
-                s4.close()
-                s6.close()
-
+        (self.ipv4_enabled, self.ipv6_enabled, self.ip_dual_stack) = util.determineHostIPCapability()
 
     def getTubID(self):
         return "<unauth>"
