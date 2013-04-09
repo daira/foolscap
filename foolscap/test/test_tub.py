@@ -114,13 +114,12 @@ class SetLocation(unittest.TestCase):
 
         t.setServiceParent(self.s)
         d = t.setLocationAutomatically()
-        if not t.ip_dual_stack:
-            def _running(res):
+        d.addCallback(lambda res: t.registerReference(Referenceable()))
+        if (not t.ip_dual_stack) and t.ipv4_enabled:
+            def _when_running(res):
                 assert l.s.running
                 t.listenOn("tcp:" + str(l.getPortnum()))
-            d.addCallback(_running)
-
-        d.addCallback(lambda res: t.registerReference(Referenceable()))
+            d.addCallback(_when_running)
         def _check(furl):
             sr = SturdyRef(furl)
             portnum = l.getPortnum()

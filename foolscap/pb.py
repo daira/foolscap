@@ -552,7 +552,7 @@ class Tub(service.MultiService):
             if self.ipv4_enabled:
                 local_addresses.add("127.0.0.1")
             if self.ipv6_enabled:
-                local_addresses.add("::1")
+                local_addresses.add("ipv6:[::1]")
             locations = set()
             for l in self.getListeners():
                 portnum = l.getPortnum()
