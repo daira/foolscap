@@ -115,7 +115,7 @@ class SetLocation(unittest.TestCase):
         t.setServiceParent(self.s)
         d = t.setLocationAutomatically()
         d.addCallback(lambda res: t.registerReference(Referenceable()))
-        if (not t.ip_dual_stack) and t.ipv4_enabled:
+        if (not t.ip_dual_stack) and t.ipv6_enabled:
             def _when_running(res):
                 assert l.s.running
                 t.listenOn("tcp:" + str(l.getPortnum()))
