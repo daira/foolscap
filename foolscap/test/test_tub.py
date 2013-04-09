@@ -108,11 +108,18 @@ class SetLocation(unittest.TestCase):
         t = GoodEnoughTub()
         if t.ip_dual_stack or t.ipv6_enabled:
             l = t.listenOn("tcp6:0")
-        if t.ipv4_enabled and not t.ip_dual_stack:
+
+        if t.ipv4_enabled and not t.ipv6_enabled:
             l = t.listenOn("tcp:0")
 
         t.setServiceParent(self.s)
         d = t.setLocationAutomatically()
+        if not t.ip_dual_stack:
+            def _running(res):
+                assert l.s.running
+                t.listenOn("tcp:" + str(l.getPortnum()))
+            d.addCallback(_running)
+
         d.addCallback(lambda res: t.registerReference(Referenceable()))
         def _check(furl):
             sr = SturdyRef(furl)
@@ -120,10 +127,10 @@ class SetLocation(unittest.TestCase):
             if sr.encrypted:
                 for lh in sr.locationHints:
                     self.failUnlessEqual(lh[2], portnum, lh)
-                if t.ip_dual_stack or t.ipv6_enabled:
+                if t.ipv6_enabled:
                     self.failUnless( ("ipv6", "::1", portnum)
                                  in sr.locationHints)
-                if t.ipv4_enabled and not t.ip_dual_stack:
+                if t.ipv4_enabled:
                     self.failUnless( ("ipv4", "127.0.0.1", portnum)
                                  in sr.locationHints)
             else:

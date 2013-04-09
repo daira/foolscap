@@ -107,10 +107,10 @@ def determineHostIPCapability():
     if ipv6_enabled and ipv4_enabled:
         try:
             s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s6.bind(('::1', 0))
+            s6.bind(('::', 0))
             s6.listen(1)
             s4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s4.bind(('127.0.0.1', s6.getsockname()[1]))
+            s4.bind(('0.0.0.0', s6.getsockname()[1]))
             s4.listen(1)
             ip_dual_stack = False # if I listen on IPv6, I'm not listening on IPv4
             s4.close()
