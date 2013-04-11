@@ -106,7 +106,7 @@ class SetLocation(unittest.TestCase):
 
     def test_set_location_automatically(self):
         t = GoodEnoughTub()
-        if t.ip_dual_stack or t.ipv6_enabled:
+        if t.ipv6_enabled:
             l = t.listenOn("tcp6:0")
 
         if t.ipv4_enabled and not t.ipv6_enabled:
