@@ -157,6 +157,10 @@ class WithIPv6Mixin:
 class ListenOnMixin:
     def testListenOnPort(self):
         s1 = self.services[0]
+        if not s1.ipv4_enabled:
+            raise unittest.SkipTest("No IPv4, skipping")
+        if not s1.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         l = s1.listenOn(self.get_interface_strport())
         self.failUnless(isinstance(l, pb.Listener))
         self.failUnlessEqual(len(s1.getListeners()), 1)
