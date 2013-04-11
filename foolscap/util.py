@@ -83,28 +83,29 @@ def get_local_ips_for(target='A.ROOT-SERVERS.NET'):
     return [localip]
 
 def determineHostIPCapability():
+    s = None
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         s.bind(('::1', 0))
         s.listen(1)
         ipv6_enabled = True
-        s.close()
     except:
         ipv6_enabled = False
-        s.close()
+    if s: s.close()
 
+    s = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(('127.0.0.1', 0))
         s.listen(1)
         ipv4_enabled = True
-        s.close()
     except:
         ipv4_enabled = False
-        s.close()
+    if s: s.close()
 
     # I'm not sure if this is working, I need more machines without IPv6...
     if ipv6_enabled and ipv4_enabled:
+        s4 = s6 = None
         try:
             s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             s6.bind(('::', 0))
@@ -113,12 +114,10 @@ def determineHostIPCapability():
             s4.bind(('0.0.0.0', s6.getsockname()[1]))
             s4.listen(1)
             ip_dual_stack = False # if I listen on IPv6, I'm not listening on IPv4
-            s4.close()
-            s6.close()
         except:
             ip_dual_stack = True # if I listen on IPv6, I'm also listening on IPv4
-            s4.close()
-            s6.close()
+        if s4: s4.close()
+        if s6: s6.close()
     else:
         ip_dual_stack = False
     return (ipv4_enabled, ipv6_enabled, ip_dual_stack)
