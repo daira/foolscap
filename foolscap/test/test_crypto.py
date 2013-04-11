@@ -39,7 +39,7 @@ class Target(Referenceable):
     def remote_fail(self):
         raise ValueError("you asked me to fail")
 
-class UsefulMixin:
+class MakeTubsMixin:
     num_services = 2
     def setUp(self):
         if not crypto_available:
@@ -58,7 +58,7 @@ class UsefulMixin:
         self.failIf(pb.Listeners)
         return flushEventualQueue()
 
-class TestPersist(UsefulMixin, unittest.TestCase):
+class TestPersist(MakeTubsMixin, unittest.TestCase):
     num_services = 2
     (ipv4_enabled, ipv6_enabled, ip_dual_stack) = util.determineHostIPCapability()
     def testPersist4(self):
@@ -131,7 +131,55 @@ class TestPersist(UsefulMixin, unittest.TestCase):
         self.failUnlessEqual(t1.calls, [])
         self.failUnlessEqual(t2.calls, [(1,2)])
 
-class TestListeners(UsefulMixin, unittest.TestCase):
+class MakeTubsMockinglyMixin(MakeTubsMixin):
+    def setUp(self):
+        class FakeServer:
+            def __init__(self, *args, **kwargs):
+                pass
+            def setServiceParent(self, parent):
+                pass
+            def disownServiceParent(self):
+                pass
+
+        import twisted.internet
+        self.patch(twisted.application.internet, 'TCPServer', FakeServer)
+
+        return MakeTubsMixin.setUp(self)
+        
+class WithIPv4Mixin:
+    def get_interface_strport(self):
+        return 'tcp:0'
+
+class WithIPv6Mixin:
+    def get_interface_strport(self):
+        return 'tcp6:0'
+
+class ListenOnMixin:
+    def testListenOnPort(self):
+        s1 = self.services[0]
+        l = s1.listenOn(self.get_interface_strport())
+        self.failUnless(isinstance(l, pb.Listener))
+        self.failUnlessEqual(len(s1.getListeners()), 1)
+        self.failUnlessEqual(len(pb.Listeners), 1)
+        s1.stopListeningOn(l)
+        self.failUnlessEqual(len(s1.getListeners()), 0)
+        self.failUnlessEqual(len(pb.Listeners), 0)
+    
+class SystemTestListenOnIPv4(ListenOnMixin, MakeTubsMockinglyMixin, WithIPv4Mixin, unittest.TestCase):
+    pass
+    
+class SystemTestListenOnIPv6(ListenOnMixin, MakeTubsMockinglyMixin, WithIPv6Mixin, unittest.TestCase):
+    pass
+    
+class UnitTestListenOnIPv4(ListenOnMixin, MakeTubsMixin, WithIPv4Mixin, unittest.TestCase):
+    pass
+    
+class UnitTestListenOnIPv6(ListenOnMixin, MakeTubsMixin, WithIPv6Mixin, unittest.TestCase):
+    pass
+    
+
+
+class TestListeners(MakeTubsMixin, unittest.TestCase):
     num_services = 3
     (ipv4_enabled, ipv6_enabled, ip_dual_stack) = util.determineHostIPCapability()
 
