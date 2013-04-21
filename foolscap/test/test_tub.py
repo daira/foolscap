@@ -98,6 +98,8 @@ class SetLocation(unittest.TestCase):
 
     def test_set_location6(self):
         t = GoodEnoughTub()
+        if not t.ipv6_enabled:
+            raise unittest.SkipTest("No IPv6, skipping")
         t.listenOn("tcp6:0")
         t.setServiceParent(self.s)
         t.setLocation("ipv6:[::1]:12345")

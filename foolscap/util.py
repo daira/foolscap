@@ -1,7 +1,7 @@
 
 import socket
 import time
-from twisted.internet import defer, reactor, protocol
+from twisted.internet import address, defer, reactor, protocol
 
 
 class AsyncAND(defer.Deferred):
@@ -83,15 +83,18 @@ def get_local_ips_for(target='A.ROOT-SERVERS.NET'):
     return [localip]
 
 def determineHostIPCapability():
-    s = None
-    try:
-        s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-        s.bind(('::1', 0))
-        s.listen(1)
-        ipv6_enabled = True
-    except:
+    if hasattr(address, 'IPv6Address'):
+        s = None
+        try:
+            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            s.bind(('::1', 0))
+            s.listen(1)
+            ipv6_enabled = True
+        except:
+            ipv6_enabled = False
+        if s: s.close()
+    else:
         ipv6_enabled = False
-    if s: s.close()
 
     s = None
     try:

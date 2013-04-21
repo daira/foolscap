@@ -137,8 +137,9 @@ class Create:
             # same one later
             pieces[pieces.index("0")] = str(l0.getPortnum())
             if pieces[0][:3] != "tcp":
-                if isinstance(l0.s._port.getHost(), address.IPv6Address):
-                    addrType='tcp6'
+                if hasattr(address,'IPv6Address'):
+                    if isinstance(l0.s._port.getHost(), address.IPv6Address):
+                        addrType='tcp6'
                 elif isinstance(l0.s._port.getHost(), address.IPv4Address):
                     addrType='tcp4'
                 pieces = [addrType] + pieces

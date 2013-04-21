@@ -8,6 +8,7 @@ from twisted.application import service
 from foolscap.api import Tub, eventually
 from foolscap.appserver import cli, server, client
 from foolscap.test.common import ShouldFailMixin, crypto_available, StallMixin
+from foolscap.util import determineHostIPCapability
 
 class RequiresCryptoBase:
     def setUp(self):
@@ -102,6 +103,8 @@ class CLI(RequiresCryptoBase, unittest.TestCase):
         return d
 
     def test_create5(self):
+        if not determineHostIPCapability()[1]:
+            raise unittest.SkipTest("No IPv6, skipping")
         basedir = "appserver/CLI/create5"
         os.makedirs(basedir)
         serverdir = os.path.join(basedir, "fl")
