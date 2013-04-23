@@ -140,7 +140,9 @@ class Create:
                 if hasattr(address,'IPv6Address'):
                     if isinstance(l0.s._port.getHost(), address.IPv6Address):
                         addrType='tcp6'
-                elif isinstance(l0.s._port.getHost(), address.IPv4Address):
+                    elif isinstance(l0.s._port.getHost(), address.IPv4Address):
+                        addrType='tcp4'
+                else:
                     addrType='tcp4'
                 pieces = [addrType] + pieces
             got_port = ":".join(pieces)
